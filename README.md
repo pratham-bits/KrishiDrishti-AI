@@ -14,7 +14,7 @@ for canal command areas using Sentinel-2, Sentinel-1, CHIRPS, and ERA5.
 ## Repository Structure
 
 ```
-bah2026-ps6/
+KrishiDrishti AI/
 ├── crop_mapping/          # Module 1 — GEE ingestion + RF/XGBoost classification
 ├── stress_detection/      # Module 2 — LSTM moisture stress detection
 ├── advisory_engine/       # Module 3 — FAO-56 water balance + Streamlit dashboard
@@ -27,25 +27,14 @@ bah2026-ps6/
 └── app.py                 # Streamlit dashboard entry point
 ```
 
----
 
-## Team & Module Ownership
-
-| Module | Owner | Responsibility |
-|---|---|---|
-| `crop_mapping/` | Member 1 | GEE scripts, feature engineering, RF training |
-| `stress_detection/` | Member 2 | Tensor prep, LSTM model, stress evaluation |
-| `advisory_engine/` | Member 3 | Water balance, dashboard components |
-| `shared/`, `config/`, `app.py` | Team Lead (Pratham) | Integration, merges, deployment |
-
----
 
 ## Quickstart
 
 ```bash
 # 1. Clone
-git clone https://github.com/YOUR_USERNAME/bah2026-ps6.git
-cd bah2026-ps6
+git clone git push -u origin main
+cd KrishiDrishti AI
 
 # 2. Create virtual environment
 python -m venv venv
@@ -117,10 +106,10 @@ pyyaml>=6.0.0
 ## Branching Strategy
 
 ```
-main              ← 
-├── feature/crop-mapping    ← Member 1
-├── feature/stress-lstm     ← Member 2
-└── feature/advisory-dash   ← Member 3
+main              
+├── feature/crop-mapping   
+├── feature/stress-lstm     
+└── feature/advisory-dash   
 ```
 
 Never commit directly to `main`. Open a PR, get it reviewed, then merge.
