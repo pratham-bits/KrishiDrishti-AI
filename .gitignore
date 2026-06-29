@@ -1,0 +1,73 @@
+# ==============================================================================
+# Python Environment & Cache
+# ==============================================================================
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+.venv/
+venv/
+env/
+.env
+*.egg-info/
+
+# ==============================================================================
+# Data Files — Never commit raw/processed geospatial arrays or satellite tracks
+# ==============================================================================
+# Ignore all contents within the root data directory
+data/*
+!data/.gitkeep
+
+# Ignore all contents within the nested stress detection data directory
+stress_detection/data/*
+!stress_detection/data/.gitkeep
+
+# Broad geospatial extensions to catch accidental binary tracking
+*.tif
+*.tiff
+*.csv
+*.geojson
+*.shp
+
+# ==============================================================================
+# Model Weights & Execution Outputs — Too large for GitHub
+# ==============================================================================
+# Ignore all training/mapping outputs at the root level
+outputs/*
+!outputs/.gitkeep
+
+# Ignore deep learning weights (.pt / .pth) inside the PyTorch module
+stress_detection/models/*
+!stress_detection/models/.gitkeep
+*.pt
+*.pth
+*.pkl
+*.h5
+
+# ==============================================================================
+# GEE Credentials & Cloud Secrets — Security Guardrails
+# ==============================================================================
+~/.config/earthengine/
+credentials.json
+service_account_key.json
+*.json
+
+# ==============================================================================
+# Jupyter Notebook Checkpoints
+# ==============================================================================
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# ==============================================================================
+# Operating System & IDE Artifacts
+# ==============================================================================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# ==============================================================================
+# Execution Logs
+# ==============================================================================
+logs/
+*.log

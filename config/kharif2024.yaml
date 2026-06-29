@@ -1,0 +1,120 @@
+# =============================================================
+
+# Single source of truth for all three modules.
+# Never hardcode values that appear here in any Python script.
+# =============================================================
+
+# ── Area of Interest ─────────────────────────────────────────
+aoi:
+  name: "Nagarjunasagar Left Canal Command Area"
+  state: "Telangana / Andhra Pradesh"
+  districts: ["Nalgonda", "Guntur", "Krishna", "Suryapet"]
+  approx_bbox: [79.0, 16.0, 80.5, 17.5]   # [lon_min, lat_min, lon_max, lat_max]
+  gee_source: "FAO/GAUL/2015/level2"
+
+# ── Season ───────────────────────────────────────────────────
+season:
+  name: "Kharif 2024"
+  start: "2024-06-01"
+  end:   "2024-11-30"
+
+# ── Epochs (16-day composites) ───────────────────────────────
+epochs:
+  - {name: "E1", start: "2024-06-01", end: "2024-06-16"}
+  - {name: "E2", start: "2024-06-17", end: "2024-07-02"}
+  - {name: "E3", start: "2024-07-03", end: "2024-07-18"}
+  - {name: "E4", start: "2024-07-19", end: "2024-08-03"}
+  - {name: "E5", start: "2024-08-04", end: "2024-08-19"}
+  - {name: "E6", start: "2024-08-20", end: "2024-09-04"}
+
+# ── Crops ────────────────────────────────────────────────────
+crops:
+  names: ["Rice", "Maize", "Cotton"]
+  labels: {Rice: 0, Maize: 1, Cotton: 2}
+  n_classes: 3
+
+# ── Satellite Sources (GEE collection IDs) ───────────────────
+gee:
+  sentinel2:  "COPERNICUS/S2_SR_HARMONIZED"
+  sentinel1:  "COPERNICUS/S1_GRD"
+  chirps:     "UCSB-CHG/CHIRPS/DAILY"
+  era5:       "ECMWF/ERA5_LAND/DAILY_AGGR"
+  scale_m:    30          # export resolution in metres
+
+# ── Cloud Fallback ───────────────────────────────────────────
+cloud_fallback:
+  threshold: 0.80         # switch to SAR-only when cloud fraction > this
+
+# ── Module 1: Crop Mapping ───────────────────────────────────
+crop_mapping:
+  features:
+    optical:   ["ndvi", "evi", "ndwi"]
+    sar:       ["vv", "vh", "vhvv"]
+    texture:   ["glcm_contrast", "glcm_entropy"]
+    phenology: ["ndvi_peak", "ndvi_sos", "ndvi_lgp"]
+  model:
+    type:             "RandomForest"
+    n_estimators:     300
+    max_depth:        20
+    min_samples_leaf: 5
+    n_jobs:           -1
+    random_state:     42
+    test_size:        0.25
+  paths:
+    features_csv:   "data/processed/kharif2024_features.csv"
+    model_out:      "outputs/models/rf_kharif2024.joblib"
+    crop_map_out:   "outputs/maps/crop_map_kharif2024.tif"
+    metrics_out:    "outputs/metrics/crop_mapping_metrics.json"
+
+# ── Module 2: Stress Detection ────────────────────────────────
+stress_detection:
+  tensor:
+    sequence_length: 6      # T — time steps
+    n_features:      8      # F — features per time step
+    batch_size:      256    # B
+    features: ["ndvi","evi","ndwi","vv","vh","vhvv_ratio","vci","smi"]
+  model:
+    type:             "LSTM"
+    hidden_size:      128
+    num_layers:       2
+    dropout:          0.3
+    n_classes:        3     # No Stress, Mild, Severe
+    use_stage_embedding: true
+    stage_embed_dim:  8
+  training:
+    epochs:           60
+    learning_rate:    0.001
+    weight_decay:     0.0001
+    scheduler:        "CosineAnnealingLR"
+    early_stopping:   10
+    val_split:        0.20
+    random_seed:      42
+    device:           "auto"
+  stress_thresholds:
+    Sowing:        [0.35, 0.20]
+    Vegetative:    [0.40, 0.25]
+    Reproductive:  [0.45, 0.28]
+    Maturity:      [0.30, 0.15]
+  paths:
+    tensor_dir:      "data/processed/tensors/"
+    model_out:       "outputs/models/lstm_best.pt"
+    stress_out:      "outputs/metrics/stress_labels.csv"
+    metrics_out:     "outputs/metrics/stress_metrics.json"
+
+# ── Module 3: Advisory Engine ─────────────────────────────────
+advisory_engine:
+  water_balance:
+    interval_days: 8
+    advisory_thresholds:
+      no_irrigation:   0       # deficit <= 0 mm
+      irrigate_soon:   20      # 0 < deficit <= 20 mm
+      irrigate_now:    20      # deficit > 20 mm
+  kc_values:
+    Rice:   {Sowing: 1.05, Vegetative: 1.20, Reproductive: 1.20, Maturity: 0.90}
+    Maize:  {Sowing: 0.40, Vegetative: 1.15, Reproductive: 1.20, Maturity: 0.60}
+    Cotton: {Sowing: 0.45, Vegetative: 0.95, Reproductive: 1.15, Maturity: 0.70}
+  paths:
+    met_data:        "data/processed/met_8day_kharif2024.csv"
+    water_bal_out:   "outputs/metrics/water_balance_kharif2024.csv"
+    advisory_map:    "outputs/maps/advisory_map_kharif2024.tif"
+    metrics_out:     "outputs/metrics/water_balance_mae.json"
